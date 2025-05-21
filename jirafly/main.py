@@ -4,7 +4,6 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Annotated
 
-
 import typer
 from dotenv import load_dotenv
 from jira import JIRA
@@ -45,9 +44,7 @@ def format_seconds(seconds):
 class Task:
     def __init__(self, issue):
         self.assignee: str = (
-            issue.fields.assignee.displayName
-            if issue.fields.assignee
-            else UNASSIGNED
+            issue.fields.assignee.displayName if issue.fields.assignee else UNASSIGNED
         )
         self._key: str = issue.key
         self._title: str = issue.fields.summary
@@ -73,10 +70,16 @@ class Task:
         else:
             self.ratio_type = "Product"
 
-        fix_versions = sorted(issue.fields.fixVersions, key=lambda x: x.name, reverse=True)
-        self.fix_version: str | None = fix_versions[0].name[:4] if fix_versions else None
+        fix_versions = sorted(
+            issue.fields.fixVersions, key=lambda x: x.name, reverse=True
+        )
+        self.fix_version: str | None = (
+            fix_versions[0].name[:4] if fix_versions else None
+        )
 
-        self.time_spent: int = issue.raw["fields"]["timetracking"].get("timeSpentSeconds", 0)
+        self.time_spent: int = issue.raw["fields"].get("timetracking", {}).get(
+            "timeSpentSeconds", 0
+        )
 
     @property
     def colored_title(self):
@@ -180,9 +183,11 @@ def _print_tasks_by_assignee(tasks_by_assignee, verbose):
     def get_task_detail(task_):
         return (
             f"{task_.hle:.2f}",
-            f"{task_.colored_title}\n{task_.colored_url}"
-            if verbose
-            else task_.colored_title,
+            (
+                f"{task_.colored_title}\n{task_.colored_url}"
+                if verbose
+                else task_.colored_title
+            ),
             f"{task_.wsjf or ''}",
             task_.status,
         )
@@ -229,9 +234,10 @@ def _highlight_exceeding(task: Task) -> str:
 
 @app.command()
 def planning(
-    marek: Annotated[tuple[float, float], typer.Option("--marek")],
-    ondra: Annotated[tuple[float, float], typer.Option("--ondra")],
-    pavel: Annotated[tuple[float, float], typer.Option("--pavel")],
+    peter: Annotated[tuple[float, float], typer.Option("--peter")],
+    petr: Annotated[tuple[float, float], typer.Option("--petr")],
+    jakub: Annotated[tuple[float, float], typer.Option("--jakub")],
+    filip: Annotated[tuple[float, float], typer.Option("--filip")],
     filter_id: str = PLANNING_FILTER_ID,
     verbose: Annotated[bool, typer.Option("--verbose", "-v")] = False,
 ):
@@ -239,9 +245,10 @@ def planning(
     tasks = client.fetch_tasks(filter_id)
 
     members = {
-        "Marek Dostál": MemberPlan(*marek),
-        "Pavel Dedík": MemberPlan(*pavel),
-        "Ondřej Kulatý": MemberPlan(*ondra),
+        "Peter Kubov": MemberPlan(*peter),
+        "Petr Olah": MemberPlan(*petr),
+        "Jakub Ječmínek": MemberPlan(*jakub),
+        "Filip Stehlík": MemberPlan(*filip),
     }
     tasks_by_assignee = {**members, UNASSIGNED: MemberPlan(0, 0)}
 
@@ -296,11 +303,15 @@ def ratio(
             table.add_row(
                 [
                     colored(fix_version, attrs=["bold"]) if j == 1 else "",
-                    f"{task.colored_title}\n{task.colored_url}"
-                    if verbose
-                    else task.colored_title,
+                    (
+                        f"{task.colored_title}\n{task.colored_url}"
+                        if verbose
+                        else task.colored_title
+                    ),
                     f"{task.hle:.2f}",
-                    colored(format_seconds(task.time_spent), _highlight_exceeding(task)),
+                    colored(
+                        format_seconds(task.time_spent), _highlight_exceeding(task)
+                    ),
                 ],
                 divider=True if j == tasks_count else False,
             )
