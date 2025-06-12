@@ -1,22 +1,58 @@
-[tool.poetry]
+[project]
 name = "jirafly"
 version = "0.1.0"
 description = ""
-authors = ["Marek Dostál <dstlmrk@gmail.com>"]
+authors = [
+    {name = "Marek Dostál", email = "dstlmrk@gmail.com"}
+]
 readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "jira>=3.8.0",
+    "prettytable>=3.12.0",
+    "typer>=0.13.0",
+    "termcolor>=2.5.0",
+    "python-dotenv>=1.0.1",
+    "pyyaml>=6.0.2",
+    "pydantic>=2.11.5",
+]
 
-[tool.poetry.dependencies]
-python = "^3.12"
-jira = "^3.8.0"
-prettytable = "^3.12.0"
-typer = "^0.13.0"
-termcolor = "^2.5.0"
-python-dotenv = "^1.0.1"
+[project.scripts]
+jirafly = "jirafly.main:main"
 
-
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.9.4"
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.11.13",
+    "pre-commit>=4.2.0",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+fix = true
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
